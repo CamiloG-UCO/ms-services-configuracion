@@ -6,12 +6,9 @@ import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import org.springframework.stereotype.Repository;import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 
 @Repository
 public interface IHabitacionRepository extends JpaRepository<Habitacion, UUID> {
@@ -20,16 +17,9 @@ public interface IHabitacionRepository extends JpaRepository<Habitacion, UUID> {
     @Query("SELECT h FROM Habitacion h WHERE h.hotel.nombre = :nombreHotel AND h.habitacionId = :habitacionId")
     Optional<Habitacion> findByHotelNombreAndHabitacionId(@Param("nombreHotel") String nombreHotel, @Param("habitacionId") String habitacionId);
 
+    Optional<Habitacion> findByHabitacionId(String habitacionId);
 
-    @Query("SELECT h FROM Habitacion h WHERE h.hotel.nombre = :nombreHotel")
-    List<Habitacion> findByHotelNombre(@Param("nombreHotel") String nombreHotel);
-
-
-    List<Habitacion> findByEstado(EstadoHabitacion estado);
-
-
-    @Query("SELECT h FROM Habitacion h WHERE h.hotel.nombre = :nombreHotel AND h.estado = :estado")
-    List<Habitacion> findByHotelNombreAndEstado(@Param("nombreHotel") String nombreHotel, @Param("estado") EstadoHabitacion estado);
+    boolean existsByHabitacionId(String habitacionId);
 
 
     @Query("SELECT h FROM Habitacion h WHERE h.hotel.nombre = :nombreHotel AND h.estado = :estado")
@@ -54,4 +44,6 @@ public interface IHabitacionRepository extends JpaRepository<Habitacion, UUID> {
 
     @Query("SELECT COUNT(h) FROM Habitacion h WHERE h.hotel.nombre = :nombreHotel AND h.estado = 'INACTIVO'")
     long countHabitacionesInactivasByHotel(@Param("nombreHotel") String nombreHotel);
+
+    Optional<Habitacion> findById(UUID id);
 }
