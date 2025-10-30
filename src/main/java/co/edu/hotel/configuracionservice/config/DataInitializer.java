@@ -57,19 +57,17 @@ public class DataInitializer implements CommandLineRunner {
 
 
     private void createHotelesIfNotExist() {
-        createHotelIfNotExist("Santa Marta Resort", "Carrera 1 # 2-3, Santa Marta", "3001234567", "info@santamartaresort.com");
-        createHotelIfNotExist("Hotel Caribe", "Avenida Santander # 5-10, Cartagena", "3009876543", "reservas@hotelcaribe.com");
+        createHotelIfNotExist("Santa Marta Resort", "Carrera 1 # 2-3, Santa Marta", "3001234567");
+        createHotelIfNotExist("Hotel Caribe", "Avenida Santander # 5-10, Cartagena", "3009876543");
     }
 
 
-    private void createHotelIfNotExist(String nombre, String direccion, String telefono, String email) {
+    private void createHotelIfNotExist(String nombre, String direccion, String telefono) {
         if (!hotelRepository.existsByNombre(nombre)) {
             Hotel hotel = Hotel.builder()
                     .nombre(nombre)
                     .direccion(direccion)
                     .telefono(telefono)
-                    .email(email)
-                    .activo(true)
                     .build();
             
             hotelRepository.save(hotel);
