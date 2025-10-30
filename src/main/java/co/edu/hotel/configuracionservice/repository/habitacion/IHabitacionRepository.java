@@ -6,7 +6,8 @@ import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;import java.util.List;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,4 +47,7 @@ public interface IHabitacionRepository extends JpaRepository<Habitacion, UUID> {
     long countHabitacionesInactivasByHotel(@Param("nombreHotel") String nombreHotel);
 
     Optional<Habitacion> findById(UUID id);
+
+    @Query("SELECT h FROM Habitacion h JOIN FETCH h.hotel WHERE h.habitacionId = :habitacionId")
+    Optional<Habitacion> findWithHotelByHabitacionId(@Param("habitacionId") String habitacionId);
 }

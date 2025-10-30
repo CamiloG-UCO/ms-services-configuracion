@@ -7,6 +7,7 @@ import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitac
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
 import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionRepository;
+import co.edu.hotel.configuracionservice.repository.hotel.IHotelRepository;
 import co.edu.hotel.configuracionservice.services.habitacion.IHabitacionService;
 import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
@@ -36,6 +37,8 @@ public class EstadoOperativoHabitacionSteps {
     @Autowired
     private IHabitacionRepository habitacionRepository;
 
+    @Autowired
+    private IHotelRepository hotelRepository;
 
     private Habitacion habitacionContexto;
     private HabitacionResponse respuestaContexto;
@@ -51,10 +54,10 @@ public class EstadoOperativoHabitacionSteps {
 
         Hotel hotel = new Hotel();
         hotel.setNombre(nombreHotel);
-        
 
+        
         habitacionContexto = new Habitacion();
-        habitacionContexto.setHotel(hotel);
+        habitacionContexto.setHotel(hotelRepository.save(hotel));
         habitacionContexto.setHabitacionId("101");
         habitacionContexto.setNombre("Suite de Prueba");
         habitacionContexto.setTipo(TipoHabitacion.SUITE);
@@ -173,7 +176,7 @@ public class EstadoOperativoHabitacionSteps {
         
 
         habitacionContexto = new Habitacion();
-        habitacionContexto.setHotel(hotel);
+        habitacionContexto.setHotel(hotelRepository.save(hotel));
         habitacionContexto.setHabitacionId("202");
         habitacionContexto.setNombre("Habitación Estándar");
         habitacionContexto.setTipo(TipoHabitacion.STANDARD);
