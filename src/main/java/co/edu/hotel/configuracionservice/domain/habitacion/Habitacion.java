@@ -25,7 +25,7 @@ public class Habitacion {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "habitacion_id", unique = true, nullable = false, length = 20)
+    @Column(name = "habitacion_id", nullable = false, length = 20)
     private String habitacionId;
 
     @Column(name = "nombre", nullable = false, length = 150)

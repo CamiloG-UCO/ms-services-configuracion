@@ -2,8 +2,10 @@ package co.edu.hotel.configuracionservice.services.habitacion;
 
 import co.edu.hotel.configuracionservice.domain.habitacion.Habitacion;
 import co.edu.hotel.configuracionservice.domain.habitacion.EstadoHabitacion;
+import co.edu.hotel.configuracionservice.domain.habitacion.TipoHabitacion;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitacionRequest;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
+import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,46 @@ public class HabitacionService implements IHabitacionService {
         logger.info("HabitacionService inicializado");
     }
 
+    //Crea una nueva habitación validando que no exista por habitacionId.
+    @Override
+    public Habitacion crearHabitacion(String habitacionId, String nombre, String tipo, int capacidad, Hotel hotel) {
+        logger.info("Creando habitación - ID: {}, Nombre: {}, Tipo: {}, Capacidad: {}, Hotel: {}",
+                habitacionId, nombre, tipo, capacidad, hotel != null ? hotel.getNombre() : null);
+
+        if (habitacionRepository.existsByHabitacionId(habitacionId)) {
+            throw new IllegalArgumentException("Ya existe una habitación con el ID: " + habitacionId);
+        }
+
+        TipoHabitacion tipoEnum;
+        try {
+            tipoEnum = TipoHabitacion.valueOf(tipo.toUpperCase());
+        } catch (Exception e) {
+            logger.warn("Tipo de habitación inválido: {}", tipo);
+            throw new IllegalArgumentException("Tipo de habitación inválido: " + tipo);
+        }
+
+        Habitacion habitacion = Habitacion.builder()
+                .habitacionId(habitacionId)
+                .nombre(nombre)
+                .hotel(hotel)
+                .tipo(tipoEnum)
+                .capacidad(capacidad)
+                .estado(EstadoHabitacion.ACTIVO)
+                .fechaCambioEstado(LocalDateTime.now())
+                .build();
+
+        Habitacion saved = habitacionRepository.save(habitacion);
+        logger.info("Habitación creada con ID: {}", saved.getHabitacionId());
+
+        // notificar si corresponde (se mantiene la inyección en caso de que sea necesario)
+        try {
+            notificacionService.notificarTodosLosModulos(saved, "CREACION");
+        } catch (Exception ex) {
+            logger.debug("No se pudo notificar a los módulos: {}", ex.getMessage());
+        }
+
+        return saved;
+    }
 
     @Override
     public HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, 
