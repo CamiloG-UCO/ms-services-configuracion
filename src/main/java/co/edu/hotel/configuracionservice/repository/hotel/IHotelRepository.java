@@ -19,6 +19,6 @@ public interface IHotelRepository extends JpaRepository<Hotel, UUID> {
 
     boolean existsByNombre(String nombre);
 
-    @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(h.codigo, 5) AS int)), 0) FROM Hotel h WHERE h.codigo LIKE 'HTL-%'")
+    @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(h.hotelCodigo, 5) AS int)), 0) FROM Hotel h WHERE h.hotelCodigo LIKE 'HTL-%'")
     Integer findMaxCodigoNumero();
 }

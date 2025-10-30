@@ -5,9 +5,7 @@ import co.edu.hotel.configuracionservice.repository.hotel.IHotelRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,6 +15,7 @@ public class HotelService {
     private final IHotelRepository hotelRepository;
 
     public HotelService(IHotelRepository hotelRepository) {
+
         this.hotelRepository = hotelRepository;
     }
 
@@ -41,4 +40,23 @@ public class HotelService {
         int siguienteNumero = (maxNumero != null ? maxNumero : 0) + 1;
         return String.format("HTL-%03d", siguienteNumero);
     }
+
+    public Hotel actualizarHotel(UUID hotelId, Hotel hotel) {
+        return hotelRepository.findById(hotelId)
+                .map(existingHotel -> {
+                    existingHotel.setNombre(hotel.getNombre());
+                    existingHotel.setHotelCodigo(hotel.getHotelCodigo());
+                    existingHotel.setCiudad(hotel.getCiudad());
+                    existingHotel.setDireccion(hotel.getDireccion());
+                    existingHotel.setTelefono(hotel.getTelefono());
+                    existingHotel.setDescripcion(hotel.getDescripcion());
+                    return hotelRepository.save(existingHotel);
+                })
+                .orElseThrow(() -> new RuntimeException("Hotel no encontrado"));
+    }
+
+    public List<Hotel> findAll(){
+        return hotelRepository.findAll();
+    }
+
 }

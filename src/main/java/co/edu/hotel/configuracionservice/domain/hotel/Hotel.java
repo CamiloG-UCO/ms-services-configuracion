@@ -22,10 +22,10 @@ public class Hotel {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "hotelCodigo", nullable = false, length = 150)
+    @Column(name = "hotelCodigo", length = 150)
     private String hotelCodigo;
 
-    @Column(name = "nombre", nullable = false, length = 150)
+    @Column(name = "nombre", length = 150)
     private String nombre;
 
     @Column(name = "direccion", length = 255)
