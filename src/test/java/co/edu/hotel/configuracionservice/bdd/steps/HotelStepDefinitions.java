@@ -19,13 +19,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@CucumberContextConfiguration
-@SpringBootTest
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@Transactional
 public class HotelStepDefinitions {
 
     @Autowired
@@ -58,7 +51,7 @@ public class HotelStepDefinitions {
         }
     }
 
-    @Then("el sistema debe registrar el hotel con el código {string}")
+    @Then("el sistema debe registrar el hotel con código {string}")
     public void elSistemaDebeRegistrarElHotelConCodigo(String codigoEsperado){
         assertNotNull(codigoGenerado, "El código del hotel no debe ser nulo");
         assertEquals(codigoEsperado, codigoGenerado, "El código generado debe ser " + codigoEsperado);
@@ -67,7 +60,7 @@ public class HotelStepDefinitions {
         assertEquals("Hotel Cartagena Real", hotelGuardado.getNombre());
     }
 
-    @And("mostrar el mensaje {string}")
+    @And("mostrar el mensaje de hotel {string}")
     public void mostrarMensaje(String mensajeEsperado){
         assertEquals(mensajeEsperado, mensajeResultado, "El mensaje debe ser: " + mensajeEsperado);
     }

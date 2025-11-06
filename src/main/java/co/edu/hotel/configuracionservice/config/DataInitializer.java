@@ -47,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
                     .description(description)
                     .active(true)
                     .build();
-            
+
             roleRepository.save(role);
             log.info("Rol creado: {}", roleName);
         } else {
@@ -69,7 +69,7 @@ public class DataInitializer implements CommandLineRunner {
                     .direccion(direccion)
                     .telefono(telefono)
                     .build();
-            
+
             hotelRepository.save(hotel);
             log.info("Hotel creado: {}", nombre);
         } else {
@@ -113,14 +113,14 @@ public class DataInitializer implements CommandLineRunner {
     }
 
 
-    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre, 
-                                          TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado) {
+    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre,
+                                            TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado) {
         createHabitacionIfNotExist(hotel, habitacionId, nombre, tipo, capacidad, estado, null);
     }
 
 
-    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre, 
-                                          TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado, String motivoDesactivacion) {
+    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre,
+                                            TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado, String motivoDesactivacion) {
         if (!habitacionRepository.existsByHabitacionIdAndHotel(habitacionId, hotel)) {
             Habitacion habitacion = Habitacion.builder()
                     .habitacionId(habitacionId)
@@ -133,7 +133,7 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaCambioEstado(LocalDateTime.now())
                     .usuarioCambio("system-init")
                     .build();
-            
+
             habitacionRepository.save(habitacion);
             log.info("Habitación creada: {} - {} ({})", habitacionId, nombre, estado);
         } else {

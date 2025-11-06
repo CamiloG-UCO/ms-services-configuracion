@@ -7,11 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
 public class HotelService {
 
+    // Patrón de regex para validar teléfono (7 a 15 dígitos)
+    private static final Pattern PHONE_PATTERN = Pattern.compile("\\d{7,15}");
     private final IHotelRepository hotelRepository;
 
     public HotelService(IHotelRepository hotelRepository) {
@@ -41,18 +44,33 @@ public class HotelService {
         return String.format("HTL-%03d", siguienteNumero);
     }
 
-    public Hotel actualizarHotel(UUID hotelId, Hotel hotel) {
+    public Hotel actualizarHotel(UUID hotelId, Hotel hotelRequest) {
+
+        // Validaciones del request
+        if (hotelRequest.getTelefono() == null || hotelRequest.getTelefono().isBlank()) {
+            throw new IllegalArgumentException("Phone cannot be empty");
+        }
+        if (!PHONE_PATTERN.matcher(hotelRequest.getTelefono()).matches()) {
+            throw new IllegalArgumentException("Invalid phone format");
+        }
+        if (hotelRequest.getDescripcion() == null) {
+            // Permitimos "" (vacío) pero no null
+            throw new IllegalArgumentException("Description cannot be null");
+        }
+
+        // Lógica para buscar y actualizar
         return hotelRepository.findById(hotelId)
                 .map(existingHotel -> {
-                    existingHotel.setNombre(hotel.getNombre());
-                    existingHotel.setHotelCodigo(hotel.getHotelCodigo());
-                    existingHotel.setCiudad(hotel.getCiudad());
-                    existingHotel.setDireccion(hotel.getDireccion());
-                    existingHotel.setTelefono(hotel.getTelefono());
-                    existingHotel.setDescripcion(hotel.getDescripcion());
+                    existingHotel.setNombre(hotelRequest.getNombre());
+                    existingHotel.setHotelCodigo(hotelRequest.getHotelCodigo()); // Cuidado: esto permite cambiar el código
+                    existingHotel.setDepartamento(hotelRequest.getDepartamento());
+                    existingHotel.setCiudad(hotelRequest.getCiudad());
+                    existingHotel.setDireccion(hotelRequest.getDireccion());
+                    existingHotel.setTelefono(hotelRequest.getTelefono());
+                    existingHotel.setDescripcion(hotelRequest.getDescripcion());
                     return hotelRepository.save(existingHotel);
                 })
-                .orElseThrow(() -> new RuntimeException("Hotel no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Hotel not found"));
     }
 
     public List<Hotel> findAll(){

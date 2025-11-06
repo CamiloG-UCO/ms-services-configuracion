@@ -7,27 +7,19 @@ import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitac
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
 import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionRepository;
+import co.edu.hotel.configuracionservice.repository.hotel.IHotelRepository;
 import co.edu.hotel.configuracionservice.services.habitacion.IHabitacionService;
 import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Entonces;
 import io.cucumber.java.es.Y;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.access.AccessDeniedException;
+
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import static org.assertj.core.api.Assertions.*;
 
-
-@SpringBootTest
-@TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@Transactional
 public class EstadoOperativoHabitacionSteps {
 
     @Autowired
@@ -36,6 +28,8 @@ public class EstadoOperativoHabitacionSteps {
     @Autowired
     private IHabitacionRepository habitacionRepository;
 
+    @Autowired
+    private IHotelRepository hotelRepository;
 
     private Habitacion habitacionContexto;
     private HabitacionResponse respuestaContexto;
@@ -51,10 +45,10 @@ public class EstadoOperativoHabitacionSteps {
 
         Hotel hotel = new Hotel();
         hotel.setNombre(nombreHotel);
-        
 
+        
         habitacionContexto = new Habitacion();
-        habitacionContexto.setHotel(hotel);
+        habitacionContexto.setHotel(hotelRepository.save(hotel));
         habitacionContexto.setHabitacionId("101");
         habitacionContexto.setNombre("Suite de Prueba");
         habitacionContexto.setTipo(TipoHabitacion.SUITE);
@@ -173,7 +167,7 @@ public class EstadoOperativoHabitacionSteps {
         
 
         habitacionContexto = new Habitacion();
-        habitacionContexto.setHotel(hotel);
+        habitacionContexto.setHotel(hotelRepository.save(hotel));
         habitacionContexto.setHabitacionId("202");
         habitacionContexto.setNombre("Habitación Estándar");
         habitacionContexto.setTipo(TipoHabitacion.STANDARD);

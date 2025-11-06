@@ -1,4 +1,3 @@
-
 Feature: Hotel information update
   The administrator must be able to modify hotel data to keep the information up to date.
 

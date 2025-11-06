@@ -2,6 +2,8 @@ package co.edu.hotel.configuracionservice.controller.habitacion;
 
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitacionRequest;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
+import co.edu.hotel.configuracionservice.domain.habitacion.Habitacion;
+import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
 import co.edu.hotel.configuracionservice.services.habitacion.IHabitacionService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -75,5 +77,35 @@ public class HabitacionController {
         }
     }
 
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> crearHabitacion(
+            @RequestParam String habitacionId,
+            @RequestParam String nombre,
+            @RequestParam String tipo,
+            @RequestParam int capacidad,
+            @RequestParam String nombreHotel
+    ) {
+        try {
+            logger.info("Solicitud de creación de habitación: habitacionId={}, nombre={}, tipo={}, capacidad={}, hotel={}",
+                    habitacionId, nombre, tipo, capacidad, nombreHotel);
 
+            Hotel hotel = new Hotel();
+            hotel.setNombre(nombreHotel);
+
+            Habitacion creada = habitacionService.crearHabitacion(habitacionId, nombre, tipo, capacidad, hotel);
+
+            String mensaje = "Habitación creada exitosamente con ID " + creada.getHabitacionId();
+            logger.info("Habitación creada: {}", creada.getHabitacionId());
+            return ResponseEntity.ok(mensaje);
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al crear habitación: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al crear habitación: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
 }

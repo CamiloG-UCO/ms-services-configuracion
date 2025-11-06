@@ -2,11 +2,9 @@ package co.edu.hotel.configuracionservice.domain.habitacion;
 
 
 public enum EstadoHabitacion {
-    
     ACTIVO("Activo"),
-
     INACTIVO("Inactivo");
-    
+
     private final String descripcion;
 
     EstadoHabitacion(String descripcion) {
