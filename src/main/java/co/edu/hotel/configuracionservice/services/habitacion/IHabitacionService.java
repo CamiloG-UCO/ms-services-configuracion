@@ -18,6 +18,7 @@ public interface IHabitacionService {
 
     HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, String usuarioAdmin);
 
+    HabitacionResponse reactivarHabitacion(String nombreHotel, String numeroHabitacion, String usuarioAdmin);
 
     Page<HabitacionResponse> listarHabitacionesPaginadas(Pageable pageable);
     List<HabitacionResponse> listarPorEstado(EstadoHabitacion estado);
