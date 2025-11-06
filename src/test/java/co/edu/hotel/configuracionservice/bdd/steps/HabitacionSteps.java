@@ -14,30 +14,7 @@ import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Entonces;
 import io.cucumber.java.es.Y;
-import io.cucumber.spring.CucumberContextConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
-import org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener;
-import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
-import org.springframework.transaction.annotation.Transactional;
 
-@CucumberContextConfiguration
-@SpringBootTest
-@TestExecutionListeners(value = {
-        DependencyInjectionTestExecutionListener.class,
-        DirtiesContextBeforeModesTestExecutionListener.class,
-        DirtiesContextTestExecutionListener.class
-}, mergeMode = TestExecutionListeners.MergeMode.REPLACE_DEFAULTS)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-        "spring.datasource.driverClassName=org.h2.Driver",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.show-sql=false",
-        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
-})
-@Transactional
 public class HabitacionSteps {
 
     private static final String HABITACION_ID_ESPERADA = "H-456";
@@ -76,7 +53,6 @@ public class HabitacionSteps {
     public void elHotel(String nombreHotel) {
         Hotel nuevoHotel = Hotel.builder()
                 .nombre(nombreHotel)
-                .activo(true)
                 .build();
         hotel = hotelRepository.save(nuevoHotel);
     }
