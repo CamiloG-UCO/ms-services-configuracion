@@ -81,7 +81,7 @@ public class EstadoOperativoHabitacionSteps {
             DesactivarHabitacionRequest req = new DesactivarHabitacionRequest();
             req.setNombreHotel(habitacionContexto.getHotel().getNombre());
             req.setNumeroHabitacion(habitacionContexto.getHabitacionId());
-            req.setMotivoDesactivacion("Desactivar por mantenimiento"); // ¡exacto!
+            req.setMotivoDesactivacion("Desactivar por mantenimiento");
             try {
                 respuestaContexto = habitacionService.desactivarPorMantenimiento(req, usuarioAdminContexto);
             } catch (Exception e) { excepcionContexto = e; }
