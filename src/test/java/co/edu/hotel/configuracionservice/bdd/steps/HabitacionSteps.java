@@ -57,28 +57,48 @@ public class HabitacionSteps {
         hotel = hotelRepository.save(nuevoHotel);
     }
 
+    @Dado("existe una habitación con ID {string} en el hotel {string}")
+    public void existeHabitacionConIdEnHotel(String habitacionId, String nombreHotel) {
+        if (hotel == null || !hotel.getNombre().equals(nombreHotel)) {
+            hotel = hotelRepository.save(Hotel.builder().nombre(nombreHotel).build());
+        }
+        Habitacion habitacion = Habitacion.builder()
+                .habitacionId(habitacionId)
+                .nombre("Dummy")
+                .hotel(hotel)
+                .tipo(TipoHabitacion.PREMIUM)
+                .capacidad(2)
+                .estado(EstadoHabitacion.ACTIVO)
+                .build();
+        habitacionRepository.save(habitacion);
+    }
+
+    @Dado("no existe el hotel {string}")
+    public void noExisteElHotel(String nombreHotel) {
+        hotelRepository.deleteAll();
+        hotel = null;
+    }
+
     @Cuando("el administrador ingrese nombre {string}, tipo {string}, numero_de_camas {string}, capacidad_personas {string}, descripcion {string}, estado {string}")
     public void elAdministradorIngresa(String nombre, String tipo, String numeroCamasStr, String capacidadStr,
                                        String descripcion, String estado) {
-        Integer.parseInt(numeroCamasStr); // validación simple de número de camas
-        capacidadEsperada = Integer.parseInt(capacidadStr);
-        tipoEsperado = tipo;
-        estadoEsperado = mapearEstado(estado);
-
-        habitacionCreada = habitacionService.crearHabitacion(
-                HABITACION_ID_ESPERADA,
-                nombre,
-                tipo,
-                capacidadEsperada,
-                hotel
-        );
-
-        assertThat(habitacionCreada).as("La habitación debe crearse").isNotNull();
-        assertThat(habitacionCreada.getNombre()).isEqualTo(nombre);
-        assertThat(habitacionCreada.getCapacidad()).isEqualTo(capacidadEsperada);
-        assertThat(habitacionCreada.getTipo()).isEqualTo(TipoHabitacion.valueOf(tipo.toUpperCase()));
-
-        mensajeRespuesta = "Habitación creada exitosamente";
+        try {
+            Integer.parseInt(numeroCamasStr); // validación simple de número de camas
+            capacidadEsperada = Integer.parseInt(capacidadStr);
+            tipoEsperado = tipo;
+            estadoEsperado = mapearEstado(estado);
+            habitacionCreada = habitacionService.crearHabitacion(
+                    HABITACION_ID_ESPERADA,
+                    nombre,
+                    tipo,
+                    capacidadEsperada,
+                    hotel
+            );
+            mensajeRespuesta = "Habitación creada exitosamente";
+        } catch (IllegalArgumentException e) {
+            mensajeRespuesta = e.getMessage();
+            habitacionCreada = null;
+        }
     }
 
     @Entonces("el sistema debe registrar la habitación con ID {string} y asignarla al hotel {string}")
@@ -94,8 +114,8 @@ public class HabitacionSteps {
         assertThat(persistida.getEstado()).isEqualTo(estadoEsperado);
     }
 
-    @Y("mostrar el mensaje {string}")
-    public void mostrarElMensaje(String mensajeEsperado) {
+    @Entonces("mostrar el mensaje {string}")
+    public void mostrarElMensajeSolo(String mensajeEsperado) {
         assertThat(mensajeRespuesta).isEqualTo(mensajeEsperado);
     }
 

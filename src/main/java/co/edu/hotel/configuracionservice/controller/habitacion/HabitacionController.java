@@ -4,6 +4,7 @@ import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitac
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
 import co.edu.hotel.configuracionservice.domain.habitacion.Habitacion;
 import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
+import co.edu.hotel.configuracionservice.repository.hotel.IHotelRepository;
 import co.edu.hotel.configuracionservice.services.habitacion.IHabitacionService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -26,11 +27,13 @@ public class HabitacionController {
     private static final Logger logger = LoggerFactory.getLogger(HabitacionController.class);
 
     private final IHabitacionService habitacionService;
+    private final IHotelRepository hotelRepository;
 
 
     @Autowired
-    public HabitacionController(IHabitacionService habitacionService) {
+    public HabitacionController(IHabitacionService habitacionService, IHotelRepository hotelRepository) {
         this.habitacionService = habitacionService;
+        this.hotelRepository = hotelRepository;
         logger.info("HabitacionController inicializado");
     }
 
@@ -84,15 +87,15 @@ public class HabitacionController {
             @RequestParam String nombre,
             @RequestParam String tipo,
             @RequestParam int capacidad,
-            @RequestParam String nombreHotel
+            @RequestParam String hotelCodigo
     ) {
         try {
             logger.info("Solicitud de creación de habitación: habitacionId={}, nombre={}, tipo={}, capacidad={}, hotel={}",
-                    habitacionId, nombre, tipo, capacidad, nombreHotel);
+                    habitacionId, nombre, tipo, capacidad, hotelCodigo);
 
-            Hotel hotel = new Hotel();
-            hotel.setNombre(nombreHotel);
 
+            Hotel hotel = hotelRepository.findByHotelCodigo(hotelCodigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Hotel no encontrado con código: " + hotelCodigo));
             Habitacion creada = habitacionService.crearHabitacion(habitacionId, nombre, tipo, capacidad, hotel);
 
             String mensaje = "Habitación creada exitosamente con ID " + creada.getHabitacionId();
