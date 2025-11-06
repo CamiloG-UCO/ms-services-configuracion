@@ -49,11 +49,10 @@ public class HabitacionController {
 
         try {
 
-            String usuarioAdmin = authentication.getName();
+            String usuarioAdmin ="admin.test";
 
             logger.info("Solicitud de desactivación recibida: Hotel={}, Habitación={}, Usuario={}",
                     request.getNombreHotel(), request.getNumeroHabitacion(), usuarioAdmin);
-
 
             HabitacionResponse response = habitacionService.desactivarPorMantenimiento(request, usuarioAdmin);
 
