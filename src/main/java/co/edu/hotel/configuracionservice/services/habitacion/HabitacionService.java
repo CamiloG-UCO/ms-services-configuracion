@@ -10,6 +10,9 @@ import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionReposi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +31,15 @@ public class HabitacionService implements IHabitacionService {
 
     private final INotificacionModulosService notificacionService;
 
+    private final IAutorizacionService autorizacionService;
 
     @Autowired
     public HabitacionService(IHabitacionRepository habitacionRepository,
-                            INotificacionModulosService notificacionService) {
+                            INotificacionModulosService notificacionService,
+                             IAutorizacionService autorizacionService) {
         this.habitacionRepository = habitacionRepository;
         this.notificacionService = notificacionService;
+        this.autorizacionService = autorizacionService;
         logger.info("HabitacionService inicializado");
     }
 
@@ -42,6 +48,10 @@ public class HabitacionService implements IHabitacionService {
     public Habitacion crearHabitacion(String habitacionId, String nombre, String tipo, int capacidad, Hotel hotel) {
         logger.info("Creando habitación - ID: {}, Nombre: {}, Tipo: {}, Capacidad: {}, Hotel: {}",
                 habitacionId, nombre, tipo, capacidad, hotel != null ? hotel.getNombre() : null);
+
+        if (hotel == null) {
+            throw new IllegalArgumentException("Hotel no encontrado");
+        }
 
         if (habitacionRepository.existsByHabitacionId(habitacionId)) {
             throw new IllegalArgumentException("Ya existe una habitación con el ID: " + habitacionId);
@@ -79,19 +89,23 @@ public class HabitacionService implements IHabitacionService {
     }
 
     @Override
-    public HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, 
-                                                        String usuarioAdmin) {
-        logger.info("Iniciando desactivación - Hotel: {}, Habitación: {}, Usuario: {}", 
-                   request.getNombreHotel(), request.getNumeroHabitacion(), usuarioAdmin);
+    public HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, String usuarioAdmin) {
+
+        if (!autorizacionService.tieneRol(usuarioAdmin, "ADMIN")) {
+            throw new AccessDeniedException("Usuario no autorizado para desactivar habitaciones");
+        }
+
+        logger.info("Iniciando desactivación - Hotel: {}, Habitación: {}, Usuario: {}",
+                request.getNombreHotel(), request.getNumeroHabitacion(), usuarioAdmin);
 
         try {
 
             Optional<Habitacion> habitacionOpt = habitacionRepository
-                .findByHotelNombreAndHabitacionId(request.getNombreHotel(), request.getNumeroHabitacion());
+                    .findByHotelNombreAndHabitacionId(request.getNombreHotel(), request.getNumeroHabitacion());
 
             if (habitacionOpt.isEmpty()) {
-                logger.warn("Habitación no encontrada - Hotel: {}, Habitación: {}", 
-                           request.getNombreHotel(), request.getNumeroHabitacion());
+                logger.warn("Habitación no encontrada - Hotel: {}, Habitación: {}",
+                        request.getNombreHotel(), request.getNumeroHabitacion());
                 throw new IllegalArgumentException("Habitación no encontrada");
             }
 
@@ -122,15 +136,20 @@ public class HabitacionService implements IHabitacionService {
 
             }
 
-
-            return new HabitacionResponse(
-                habitacion.getId(),
-                habitacion.getHabitacionId(),
-                habitacion.getNombre(),
-                habitacion.getHotel().getNombre(),
-                habitacion.getEstado(),
-                "Habitación desactivada exitosamente"
+            HabitacionResponse resp = new HabitacionResponse(
+                    habitacion.getId(),
+                    habitacion.getHabitacionId(),
+                    habitacion.getNombre(),
+                    habitacion.getHotel().getNombre(),
+                    habitacion.getEstado(),
+                    "Habitación desactivada exitosamente"
             );
+
+            resp.setMotivoDesactivacion(habitacion.getMotivoDesactivacion());
+            resp.setFechaCambioEstado(habitacion.getFechaCambioEstado());
+            resp.setUsuarioCambio(habitacion.getUsuarioCambio());
+
+            return resp;
 
         } catch (IllegalArgumentException | IllegalStateException e) {
             logger.warn("Error de validación: {}", e.getMessage());
@@ -141,6 +160,39 @@ public class HabitacionService implements IHabitacionService {
         }
     }
 
+    @Override
+    @Transactional
+    public HabitacionResponse reactivarHabitacion(String nombreHotel, String numeroHabitacion, String usuarioAdmin) {
+        var habitacion = habitacionRepository
+                .findByHotelNombreAndHabitacionId(nombreHotel, numeroHabitacion)
+                .orElseThrow(() -> new IllegalArgumentException("Habitación no encontrada"));
+
+        if (habitacion.getEstado() == EstadoHabitacion.ACTIVO) {
+            throw new IllegalStateException("La habitación ya está activa");
+        }
+
+        habitacion.reactivar(usuarioAdmin); // o setEstado + fecha/usuario
+        habitacion = habitacionRepository.save(habitacion);
+
+        HabitacionResponse resp = new HabitacionResponse(
+                habitacion.getId(),
+                habitacion.getHabitacionId(),
+                habitacion.getNombre(),
+                habitacion.getHotel().getNombre(),
+                habitacion.getEstado(),
+                "Habitación reactivada exitosamente"
+        );
+        resp.setMotivoDesactivacion(habitacion.getMotivoDesactivacion()); // normalmente null al activar
+        resp.setFechaCambioEstado(habitacion.getFechaCambioEstado());
+        resp.setUsuarioCambio(habitacion.getUsuarioCambio());
+        return resp;
+    }
+
+    @Override
+    public Page<HabitacionResponse> listarHabitacionesPaginadas(Pageable pageable) {
+        Page<Habitacion> pageHabitaciones = habitacionRepository.findAll(pageable);
+        return pageHabitaciones.map(this::mapearAResponse);
+    }
 
 
     private HabitacionResponse crearRespuestaExitosa(Habitacion habitacion, String mensaje) {
@@ -166,4 +218,23 @@ public class HabitacionService implements IHabitacionService {
         response.setPermiteReservas(habitacion.permiteReservas());
         return response;
     }
+
+    @Override
+    public List<HabitacionResponse> listarPorEstado(EstadoHabitacion estado) {
+        List<Habitacion> habitaciones = habitacionRepository.findByEstado(estado);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
+
+    @Override
+    public List<HabitacionResponse> listarPorHotel(Hotel hotel) {
+        List<Habitacion> habitaciones = habitacionRepository.findByHotel(hotel);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
+
+    @Override
+    public List<HabitacionResponse> listarPorTipo(TipoHabitacion tipo) {
+        List<Habitacion> habitaciones = habitacionRepository.findByTipo(tipo);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
 }
+

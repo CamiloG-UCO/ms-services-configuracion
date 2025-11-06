@@ -13,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/hotel")
+@CrossOrigin(origins = "http://localhost:4200")
 public class HotelController {
 
     private final HotelService hotelService;
@@ -32,6 +33,17 @@ public class HotelController {
                     .body(hotelService.registrarHotel(hotel));
         }catch(Exception e){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<String> createHotel(@RequestBody Hotel hotel){
+        try {
+            hotelService.registrarHotel(hotel);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Hotel registrado exitosamente");
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

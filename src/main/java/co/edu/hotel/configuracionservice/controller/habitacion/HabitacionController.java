@@ -1,14 +1,19 @@
 package co.edu.hotel.configuracionservice.controller.habitacion;
 
+import co.edu.hotel.configuracionservice.domain.habitacion.EstadoHabitacion;
+import co.edu.hotel.configuracionservice.domain.habitacion.TipoHabitacion;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitacionRequest;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
 import co.edu.hotel.configuracionservice.domain.habitacion.Habitacion;
 import co.edu.hotel.configuracionservice.domain.hotel.Hotel;
+import co.edu.hotel.configuracionservice.repository.hotel.IHotelRepository;
 import co.edu.hotel.configuracionservice.services.habitacion.IHabitacionService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,11 +31,13 @@ public class HabitacionController {
     private static final Logger logger = LoggerFactory.getLogger(HabitacionController.class);
 
     private final IHabitacionService habitacionService;
+    private final IHotelRepository hotelRepository;
 
 
     @Autowired
-    public HabitacionController(IHabitacionService habitacionService) {
+    public HabitacionController(IHabitacionService habitacionService, IHotelRepository hotelRepository) {
         this.habitacionService = habitacionService;
+        this.hotelRepository = hotelRepository;
         logger.info("HabitacionController inicializado");
     }
 
@@ -42,11 +49,10 @@ public class HabitacionController {
 
         try {
 
-            String usuarioAdmin = authentication.getName();
+            String usuarioAdmin ="admin.test";
 
             logger.info("Solicitud de desactivación recibida: Hotel={}, Habitación={}, Usuario={}",
                     request.getNombreHotel(), request.getNumeroHabitacion(), usuarioAdmin);
-
 
             HabitacionResponse response = habitacionService.desactivarPorMantenimiento(request, usuarioAdmin);
 
@@ -84,15 +90,15 @@ public class HabitacionController {
             @RequestParam String nombre,
             @RequestParam String tipo,
             @RequestParam int capacidad,
-            @RequestParam String nombreHotel
+            @RequestParam String hotelCodigo
     ) {
         try {
             logger.info("Solicitud de creación de habitación: habitacionId={}, nombre={}, tipo={}, capacidad={}, hotel={}",
-                    habitacionId, nombre, tipo, capacidad, nombreHotel);
+                    habitacionId, nombre, tipo, capacidad, hotelCodigo);
 
-            Hotel hotel = new Hotel();
-            hotel.setNombre(nombreHotel);
 
+            Hotel hotel = hotelRepository.findByHotelCodigo(hotelCodigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Hotel no encontrado con código: " + hotelCodigo));
             Habitacion creada = habitacionService.crearHabitacion(habitacionId, nombre, tipo, capacidad, hotel);
 
             String mensaje = "Habitación creada exitosamente con ID " + creada.getHabitacionId();
@@ -104,6 +110,70 @@ public class HabitacionController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             logger.error("Error interno al crear habitación: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> listarHabitacionesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Page<HabitacionResponse> habitaciones = habitacionService.listarHabitacionesPaginadas(PageRequest.of(page, size));
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al listar habitaciones paginadas: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al listar habitaciones paginadas: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-estado")
+    public ResponseEntity<?> listarPorEstado(@RequestParam EstadoHabitacion estado) {
+        try {
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorEstado(estado);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por estado: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por estado: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-hotel")
+    public ResponseEntity<?> listarPorHotel(@RequestParam String hotelCodigo) {
+        try {
+            Hotel hotel = hotelRepository.findByHotelCodigo(hotelCodigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Hotel no encontrado con código: " + hotelCodigo));
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorHotel(hotel);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por hotel: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por hotel: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-tipo")
+    public ResponseEntity<?> listarPorTipo(@RequestParam TipoHabitacion tipo) {
+        try {
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorTipo(tipo);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por tipo: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por tipo: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }

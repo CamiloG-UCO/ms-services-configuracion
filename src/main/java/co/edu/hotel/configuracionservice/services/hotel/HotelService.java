@@ -26,6 +26,23 @@ public class HotelService {
         if (hotel.getNombre() == null || hotel.getNombre().isEmpty()){
             throw new IllegalArgumentException("El nombre del hotel es obligatorio");
         }
+
+        if (hotelRepository.existsByNombre(hotel.getNombre())){
+            throw new IllegalArgumentException("Ya existe un hotel con el nombre " + hotel.getNombre());
+        }
+
+        if (hotel.getTelefono() == null || hotel.getTelefono().isBlank()){
+            throw new IllegalArgumentException("El teléfono es obligatorio");
+        }
+        if (!PHONE_PATTERN.matcher(hotel.getTelefono()).matches()){
+            throw new IllegalArgumentException("El formato del teléfono es inválido, solo se permiten " +
+                    "números entre 7 y 15 dígitos");
+        }
+
+        if (hotelRepository.existsByTelefono(hotel.getTelefono())){
+            throw new IllegalArgumentException("Ya existe un hotel con el número de teléfono ingresado: " +
+                    hotel.getTelefono());
+        }
         String codigo = generarCodigoHotel();
         hotel.setHotelCodigo(codigo);
 
