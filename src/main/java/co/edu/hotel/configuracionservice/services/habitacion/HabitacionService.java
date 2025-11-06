@@ -43,6 +43,10 @@ public class HabitacionService implements IHabitacionService {
         logger.info("Creando habitación - ID: {}, Nombre: {}, Tipo: {}, Capacidad: {}, Hotel: {}",
                 habitacionId, nombre, tipo, capacidad, hotel != null ? hotel.getNombre() : null);
 
+        if (hotel == null) {
+            throw new IllegalArgumentException("Hotel no encontrado");
+        }
+
         if (habitacionRepository.existsByHabitacionId(habitacionId)) {
             throw new IllegalArgumentException("Ya existe una habitación con el ID: " + habitacionId);
         }
