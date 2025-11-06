@@ -46,12 +46,12 @@ public class HotelController {
     }
 
 
-    @PutMapping("/{hotelId}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String>  updateHotel(@PathVariable UUID hotelId, @RequestBody Hotel hotel) {
+    public ResponseEntity<String>  updateHotel(@PathVariable UUID id, @RequestBody Hotel hotel) {
 
         try {
-            hotelService.actualizarHotel(hotelId, hotel);
+            hotelService.actualizarHotel(id, hotel);
             return ResponseEntity.ok("Información del hotel actualizada exitosamente");
 
         } catch (RuntimeException e) {
@@ -61,6 +61,25 @@ public class HotelController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del sistema");
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Hotel> findByHotelId(@PathVariable UUID id){
+        try{
+            return ResponseEntity.ok(hotelService.findById(id));
+        }catch(Exception ex){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/HC/{codigo}")
+    public ResponseEntity<Hotel> findByHotelCodigo(@PathVariable String codigo){
+        try{
+            return ResponseEntity.ok(hotelService.findByCodigo(codigo));
+        }catch(Exception ex){
+
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 }

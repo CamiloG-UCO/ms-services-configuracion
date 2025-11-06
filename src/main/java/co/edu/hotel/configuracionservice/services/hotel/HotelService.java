@@ -62,9 +62,9 @@ public class HotelService {
         return hotelRepository.findById(hotelId)
                 .map(existingHotel -> {
                     existingHotel.setNombre(hotelRequest.getNombre());
-                    existingHotel.setHotelCodigo(hotelRequest.getHotelCodigo()); // Cuidado: esto permite cambiar el código
                     existingHotel.setDepartamento(hotelRequest.getDepartamento());
                     existingHotel.setCiudad(hotelRequest.getCiudad());
+                    existingHotel.setPais(hotelRequest.getPais());
                     existingHotel.setDireccion(hotelRequest.getDireccion());
                     existingHotel.setTelefono(hotelRequest.getTelefono());
                     existingHotel.setDescripcion(hotelRequest.getDescripcion());
@@ -75,6 +75,16 @@ public class HotelService {
 
     public List<Hotel> findAll(){
         return hotelRepository.findAll();
+    }
+
+    public Hotel findById(UUID id){
+        return hotelRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hotel not found"));
+    }
+
+    public Hotel findByCodigo(String codigo){
+        return hotelRepository.findByHotelCodigo(codigo)
+                .orElseThrow(() -> new RuntimeException("Hotel not found"));
     }
 
 }
