@@ -10,6 +10,8 @@ import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionReposi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,6 +147,11 @@ public class HabitacionService implements IHabitacionService {
         }
     }
 
+    @Override
+    public Page<HabitacionResponse> listarHabitacionesPaginadas(Pageable pageable) {
+        Page<Habitacion> pageHabitaciones = habitacionRepository.findAll(pageable);
+        return pageHabitaciones.map(this::mapearAResponse);
+    }
 
 
     private HabitacionResponse crearRespuestaExitosa(Habitacion habitacion, String mensaje) {
@@ -170,4 +177,23 @@ public class HabitacionService implements IHabitacionService {
         response.setPermiteReservas(habitacion.permiteReservas());
         return response;
     }
+
+    @Override
+    public List<HabitacionResponse> listarPorEstado(EstadoHabitacion estado) {
+        List<Habitacion> habitaciones = habitacionRepository.findByEstado(estado);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
+
+    @Override
+    public List<HabitacionResponse> listarPorHotel(Hotel hotel) {
+        List<Habitacion> habitaciones = habitacionRepository.findByHotel(hotel);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
+
+    @Override
+    public List<HabitacionResponse> listarPorTipo(TipoHabitacion tipo) {
+        List<Habitacion> habitaciones = habitacionRepository.findByTipo(tipo);
+        return habitaciones.stream().map(this::mapearAResponse).toList();
+    }
 }
+

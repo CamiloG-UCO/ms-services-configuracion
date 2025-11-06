@@ -1,5 +1,7 @@
 package co.edu.hotel.configuracionservice.controller.habitacion;
 
+import co.edu.hotel.configuracionservice.domain.habitacion.EstadoHabitacion;
+import co.edu.hotel.configuracionservice.domain.habitacion.TipoHabitacion;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.DesactivarHabitacionRequest;
 import co.edu.hotel.configuracionservice.domain.habitacion.dto.HabitacionResponse;
 import co.edu.hotel.configuracionservice.domain.habitacion.Habitacion;
@@ -10,6 +12,8 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -107,6 +111,70 @@ public class HabitacionController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             logger.error("Error interno al crear habitación: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> listarHabitacionesPaginadas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Page<HabitacionResponse> habitaciones = habitacionService.listarHabitacionesPaginadas(PageRequest.of(page, size));
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al listar habitaciones paginadas: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al listar habitaciones paginadas: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-estado")
+    public ResponseEntity<?> listarPorEstado(@RequestParam EstadoHabitacion estado) {
+        try {
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorEstado(estado);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por estado: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por estado: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-hotel")
+    public ResponseEntity<?> listarPorHotel(@RequestParam String hotelCodigo) {
+        try {
+            Hotel hotel = hotelRepository.findByHotelCodigo(hotelCodigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Hotel no encontrado con código: " + hotelCodigo));
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorHotel(hotel);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por hotel: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por hotel: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor");
+        }
+    }
+
+    @GetMapping("/por-tipo")
+    public ResponseEntity<?> listarPorTipo(@RequestParam TipoHabitacion tipo) {
+        try {
+            List<HabitacionResponse> habitaciones = habitacionService.listarPorTipo(tipo);
+            return ResponseEntity.ok(habitaciones);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error de validación al consultar por tipo: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error interno al consultar por tipo: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error interno del servidor");
         }
