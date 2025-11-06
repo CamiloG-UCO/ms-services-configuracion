@@ -47,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
                     .description(description)
                     .active(true)
                     .build();
-            
+
             roleRepository.save(role);
             log.info("Rol creado: {}", roleName);
         } else {
@@ -57,21 +57,19 @@ public class DataInitializer implements CommandLineRunner {
 
 
     private void createHotelesIfNotExist() {
-        createHotelIfNotExist("Santa Marta Resort", "Carrera 1 # 2-3, Santa Marta", "3001234567", "info@santamartaresort.com");
-        createHotelIfNotExist("Hotel Caribe", "Avenida Santander # 5-10, Cartagena", "3009876543", "reservas@hotelcaribe.com");
+        createHotelIfNotExist("Santa Marta Resort", "Carrera 1 # 2-3, Santa Marta", "3001234567");
+        createHotelIfNotExist("Hotel Caribe", "Avenida Santander # 5-10, Cartagena", "3009876543");
     }
 
 
-    private void createHotelIfNotExist(String nombre, String direccion, String telefono, String email) {
+    private void createHotelIfNotExist(String nombre, String direccion, String telefono) {
         if (!hotelRepository.existsByNombre(nombre)) {
             Hotel hotel = Hotel.builder()
                     .nombre(nombre)
                     .direccion(direccion)
                     .telefono(telefono)
-                    .email(email)
-                    .activo(true)
                     .build();
-            
+
             hotelRepository.save(hotel);
             log.info("Hotel creado: {}", nombre);
         } else {
@@ -115,14 +113,14 @@ public class DataInitializer implements CommandLineRunner {
     }
 
 
-    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre, 
-                                          TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado) {
+    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre,
+                                            TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado) {
         createHabitacionIfNotExist(hotel, habitacionId, nombre, tipo, capacidad, estado, null);
     }
 
 
-    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre, 
-                                          TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado, String motivoDesactivacion) {
+    private void createHabitacionIfNotExist(Hotel hotel, String habitacionId, String nombre,
+                                            TipoHabitacion tipo, Integer capacidad, EstadoHabitacion estado, String motivoDesactivacion) {
         if (!habitacionRepository.existsByHabitacionIdAndHotel(habitacionId, hotel)) {
             Habitacion habitacion = Habitacion.builder()
                     .habitacionId(habitacionId)
@@ -135,7 +133,7 @@ public class DataInitializer implements CommandLineRunner {
                     .fechaCambioEstado(LocalDateTime.now())
                     .usuarioCambio("system-init")
                     .build();
-            
+
             habitacionRepository.save(habitacion);
             log.info("Habitación creada: {} - {} ({})", habitacionId, nombre, estado);
         } else {
