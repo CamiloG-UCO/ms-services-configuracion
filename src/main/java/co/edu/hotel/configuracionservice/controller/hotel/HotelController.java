@@ -35,6 +35,17 @@ public class HotelController {
         }
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<String> createHotel(@RequestBody Hotel hotel){
+        try {
+            hotelService.registrarHotel(hotel);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Hotel registrado exitosamente");
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping("/all")
     public ResponseEntity<List<Hotel>> findAll(){
         try{
