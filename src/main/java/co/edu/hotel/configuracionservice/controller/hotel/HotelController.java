@@ -13,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/hotel")
+@CrossOrigin(origins = "http://localhost:4200")
 public class HotelController {
 
     private final HotelService hotelService;
