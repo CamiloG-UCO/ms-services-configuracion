@@ -10,11 +10,11 @@ import co.edu.hotel.configuracionservice.repository.habitacion.IHabitacionReposi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 
@@ -28,12 +28,15 @@ public class HabitacionService implements IHabitacionService {
 
     private final INotificacionModulosService notificacionService;
 
+    private final IAutorizacionService autorizacionService;
 
     @Autowired
     public HabitacionService(IHabitacionRepository habitacionRepository,
-                            INotificacionModulosService notificacionService) {
+                            INotificacionModulosService notificacionService,
+                             IAutorizacionService autorizacionService) {
         this.habitacionRepository = habitacionRepository;
         this.notificacionService = notificacionService;
+        this.autorizacionService = autorizacionService;
         logger.info("HabitacionService inicializado");
     }
 
@@ -79,8 +82,12 @@ public class HabitacionService implements IHabitacionService {
     }
 
     @Override
-    public HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, 
-                                                        String usuarioAdmin) {
+    public HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, String usuarioAdmin) {
+
+        if (!autorizacionService.tieneRol(usuarioAdmin, "ADMIN")) {
+            throw new AccessDeniedException("Usuario no autorizado para desactivar habitaciones");
+        }
+
         logger.info("Iniciando desactivación - Hotel: {}, Habitación: {}, Usuario: {}", 
                    request.getNombreHotel(), request.getNumeroHabitacion(), usuarioAdmin);
 
@@ -122,15 +129,20 @@ public class HabitacionService implements IHabitacionService {
 
             }
 
-
-            return new HabitacionResponse(
-                habitacion.getId(),
-                habitacion.getHabitacionId(),
-                habitacion.getNombre(),
-                habitacion.getHotel().getNombre(),
-                habitacion.getEstado(),
-                "Habitación desactivada exitosamente"
+            HabitacionResponse resp = new HabitacionResponse(
+                    habitacion.getId(),
+                    habitacion.getHabitacionId(),
+                    habitacion.getNombre(),
+                    habitacion.getHotel().getNombre(),
+                    habitacion.getEstado(),
+                    "Habitación desactivada exitosamente"
             );
+
+            resp.setMotivoDesactivacion(habitacion.getMotivoDesactivacion());
+            resp.setFechaCambioEstado(habitacion.getFechaCambioEstado());
+            resp.setUsuarioCambio(habitacion.getUsuarioCambio());
+
+            return resp;
 
         } catch (IllegalArgumentException | IllegalStateException e) {
             logger.warn("Error de validación: {}", e.getMessage());
@@ -139,6 +151,34 @@ public class HabitacionService implements IHabitacionService {
             logger.error("Error interno al desactivar habitación: {}", e.getMessage(), e);
             throw new RuntimeException("Error interno del servidor", e);
         }
+    }
+
+    @Override
+    @Transactional
+    public HabitacionResponse reactivarHabitacion(String nombreHotel, String numeroHabitacion, String usuarioAdmin) {
+        var habitacion = habitacionRepository
+                .findByHotelNombreAndHabitacionId(nombreHotel, numeroHabitacion)
+                .orElseThrow(() -> new IllegalArgumentException("Habitación no encontrada"));
+
+        if (habitacion.getEstado() == EstadoHabitacion.ACTIVO) {
+            throw new IllegalStateException("La habitación ya está activa");
+        }
+
+        habitacion.reactivar(usuarioAdmin); // o setEstado + fecha/usuario
+        habitacion = habitacionRepository.save(habitacion);
+
+        HabitacionResponse resp = new HabitacionResponse(
+                habitacion.getId(),
+                habitacion.getHabitacionId(),
+                habitacion.getNombre(),
+                habitacion.getHotel().getNombre(),
+                habitacion.getEstado(),
+                "Habitación reactivada exitosamente"
+        );
+        resp.setMotivoDesactivacion(habitacion.getMotivoDesactivacion()); // normalmente null al activar
+        resp.setFechaCambioEstado(habitacion.getFechaCambioEstado());
+        resp.setUsuarioCambio(habitacion.getUsuarioCambio());
+        return resp;
     }
 
 

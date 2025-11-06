@@ -74,24 +74,29 @@ public class EstadoOperativoHabitacionSteps {
     @WithMockUser(roles = "ADMIN", username = "admin.test")
     @Cuando("el administrador seleccione {string}")
     public void elAdministradorSeleccione(String accion) {
-        try {
-            if ("Desactivar por mantenimiento".equals(accion)) {
+        excepcionContexto = null;
+        respuestaContexto = null;
 
-                DesactivarHabitacionRequest request = new DesactivarHabitacionRequest();
-                request.setNombreHotel(habitacionContexto.getHotel().getNombre());
-                request.setNumeroHabitacion(habitacionContexto.getHabitacionId());
-                request.setMotivoDesactivacion("Desactivar por mantenimiento");
-                request.setUsuarioSolicitante(usuarioAdminContexto);
+        if ("Desactivar por mantenimiento".equals(accion)) {
+            DesactivarHabitacionRequest req = new DesactivarHabitacionRequest();
+            req.setNombreHotel(habitacionContexto.getHotel().getNombre());
+            req.setNumeroHabitacion(habitacionContexto.getHabitacionId());
+            req.setMotivoDesactivacion("Desactivar por mantenimiento"); // ¡exacto!
+            try {
+                respuestaContexto = habitacionService.desactivarPorMantenimiento(req, usuarioAdminContexto);
+            } catch (Exception e) { excepcionContexto = e; }
 
+        } else if ("Reactivar habitacion".equals(accion)) {
+            try {
+                respuestaContexto = habitacionService.reactivarHabitacion(
+                        habitacionContexto.getHotel().getNombre(),
+                        habitacionContexto.getHabitacionId(),
+                        usuarioAdminContexto
+                );
+            } catch (Exception e) { excepcionContexto = e; }
 
-                respuestaContexto = habitacionService.desactivarPorMantenimiento(request, usuarioAdminContexto);
-                
-            } else if ("Reactivar habitacion".equals(accion)) {
-                DesactivarHabitacionRequest request = new DesactivarHabitacionRequest();
-               habitacionService.desactivarPorMantenimiento(request,usuarioAdminContexto);
-            }
-        } catch (Exception e) {
-            excepcionContexto = e;
+        } else {
+            throw new IllegalArgumentException("Acción no soportada: " + accion);
         }
     }
 
@@ -144,7 +149,7 @@ public class EstadoOperativoHabitacionSteps {
 
         assertThat(excepcionContexto).isNotNull();
         assertThat(excepcionContexto).isInstanceOf(IllegalStateException.class);
-        assertThat(excepcionContexto.getMessage()).contains("ya se encuentra inactiva");
+        assertThat(excepcionContexto.getMessage()).contains("La habitación ya está desactivada");
     }
 
 

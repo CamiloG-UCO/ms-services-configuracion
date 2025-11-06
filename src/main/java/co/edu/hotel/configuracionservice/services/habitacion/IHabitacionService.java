@@ -11,4 +11,6 @@ public interface IHabitacionService {
     Habitacion crearHabitacion(String habitacionId, String nombre, String tipo, int capacidad, Hotel hotel);
 
     HabitacionResponse desactivarPorMantenimiento(DesactivarHabitacionRequest request, String usuarioAdmin);
+
+    HabitacionResponse reactivarHabitacion(String nombreHotel, String numeroHabitacion, String usuarioAdmin);
 }
